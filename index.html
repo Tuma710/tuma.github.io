@@ -1,71 +1,288 @@
-<!DOCTYPE html>
-<html lang="zh-Hant">
+<!doctype html>
+<html lang="zh-Hant-TW">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>您的姓名 - 履歷</title>
-    <link rel="stylesheet" href="style.css"> </head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>視語光點｜AR 輔助溝通工具</title>
+  <meta name="description" content="以 AR 擴增實境打造『需求板』，失語症患者拖曳 3D 代幣即可表達需求；Firestore 同步、Telegram 一鍵接單，讓理解更靠近。">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      /* colors */
+      --brand-500:#5C6BC0; --brand-600:#4C57A3;
+      --brand-50:#EEF0FF; --brand-200:#BAC3FF; --brand-700:#3F4988;
+      --accent-500:#FFD180;
+      --ink-900:#0E1222; --ink-700:#2D3351; --ink-500:#5A6185; --ink-300:#98A1C0;
+      --surface-0:#FFFFFF; --surface-50:#F7F8FC; --surface-100:#EFF1F7;
+
+      /* radii & shadow */
+      --r-lg:24px; --r-xl:32px; --r-pill:999px;
+      --shadow-sm:0 2px 6px rgba(14,18,34,.06);
+      --shadow-md:0 6px 18px rgba(14,18,34,.08);
+      --shadow-lg:0 10px 30px rgba(14,18,34,.12);
+
+      /* spacing */
+      --space-4:16px; --space-6:24px; --space-8:32px; --space-12:48px; --space-16:64px; --space-20:80px;
+
+      /* container */
+      --container:1200px; --pad-x:32px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; color:var(--ink-700); background:var(--surface-50);
+      font-family:"Noto Sans TC", Inter, system-ui, -apple-system, Segoe UI, Arial;
+      line-height:1.6;
+    }
+    .container{max-width:var(--container); padding:0 var(--pad-x); margin:0 auto;}
+    .section{padding:var(--space-20) 0;}
+    .title{font-weight:700; line-height:1.2; color:var(--brand-700)}
+    .subtitle{color:var(--ink-500)}
+    .btn{display:inline-flex; align-items:center; justify-content:center; gap:8px; height:56px; padding:0 24px; border-radius:var(--r-lg); font-weight:600; text-decoration:none; border:1px solid transparent}
+    .btn.primary{background:var(--brand-500); color:#fff; box-shadow:var(--shadow-md)}
+    .btn.primary:hover{background:var(--brand-600)}
+    .btn.secondary{background:#fff; color:var(--brand-500); border-color:var(--brand-200)}
+    .card{background:#fff; border:1px solid var(--surface-100); border-radius:var(--r-xl); box-shadow:var(--shadow-sm); padding:var(--space-8)}
+    .grid{display:grid; gap:var(--space-8)}
+    .grid.cols-2{grid-template-columns:repeat(2,1fr)}
+    .grid.cols-3{grid-template-columns:repeat(3,1fr)}
+    .grid.cols-4{grid-template-columns:repeat(4,1fr)}
+    .chip{display:inline-block; padding:6px 12px; border-radius:var(--r-pill); background:var(--brand-50); color:var(--brand-700); font-size:14px}
+
+    /* Hero */
+    .hero{background:linear-gradient(180deg, var(--brand-50), #fff)}
+    .hero-wrap{display:grid; grid-template-columns:1.1fr .9fr; gap:var(--space-16); align-items:center}
+    .hero h1{font-size:56px; margin:0 0 16px}
+    .hero p{font-size:18px; margin:0 0 24px}
+    .hero-mock{background:#fff; border:1px solid var(--brand-200); border-radius:var(--r-xl); height:480px; box-shadow:var(--shadow-lg)}
+
+    /* Pain points */
+    .pain .card h3{margin:0 0 8px}
+
+    /* Feature cards */
+    .features .card h3{margin:0 0 8px}
+    .features .card p{margin:0}
+
+    /* Flow (How it works) */
+    .flow-steps{counter-reset:step}
+    .flow-steps .card{position:relative}
+    .flow-steps .card::before{
+      counter-increment:step; content:counter(step);
+      position:absolute; top:16px; right:16px; width:36px; height:36px; border-radius:50%;
+      background:var(--brand-500); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700
+    }
+
+    /* Tech */
+    .tech .note{color:var(--ink-500); font-size:14px}
+
+    /* Impact */
+    .impact .kpi{display:flex; gap:var(--space-8); flex-wrap:wrap}
+    .impact .kpi .card{flex:1 1 250px; text-align:center}
+
+    /* Team */
+    .team .member{display:flex; gap:16px; align-items:center}
+    .avatar{width:64px; height:64px; border-radius:50%; background:var(--brand-200)}
+
+    /* Contact */
+    form{display:grid; gap:16px}
+    input, textarea{
+      width:100%; padding:14px 16px; border-radius:16px; border:1px solid var(--surface-100); background:#fff; font:inherit
+    }
+    textarea{min-height:140px; resize:vertical}
+
+    /* Footer */
+    footer{padding:40px 0; color:var(--ink-500)}
+
+    /* Responsive */
+    @media (max-width:1199px){
+      .grid.cols-4{grid-template-columns:repeat(2,1fr)}
+      .hero-wrap{grid-template-columns:1fr}
+    }
+    @media (max-width:767px){
+      .grid.cols-3,.grid.cols-2,.grid.cols-4{grid-template-columns:1fr}
+      .hero h1{font-size:40px}
+      .btn{height:48px}
+    }
+  /* Floating light-orbs (decorative) */
+  .light-orb{position:fixed;border-radius:50%;pointer-events:none;mix-blend-mode:normal;z-index:20;animation:orbFloat 7s ease-in-out infinite;opacity:0.95}
+    .light-orb::after{content:'';display:block;width:100%;height:100%;border-radius:50%}
+
+    .orb-1{width:220px;height:220px;left:4%;top:8%;background:radial-gradient(circle, rgba(11,102,255,0.18) 0%, rgba(11,102,255,0) 70%);box-shadow:0 0 80px rgba(11,102,255,0.14);animation-duration:8s;animation-delay:0s}
+    .orb-2{width:160px;height:160px;right:6%;top:18%;background:radial-gradient(circle, rgba(255,210,63,0.20) 0%, rgba(255,210,63,0) 70%);box-shadow:0 0 60px rgba(255,210,63,0.16);animation-duration:9s;animation-delay:1.5s}
+    .orb-3{width:120px;height:120px;left:10%;bottom:12%;background:radial-gradient(circle, rgba(11,102,255,0.12) 0%, rgba(11,102,255,0) 70%);box-shadow:0 0 48px rgba(11,102,255,0.10);animation-duration:6.5s;animation-delay:0.8s}
+    .orb-4{width:140px;height:140px;right:14%;bottom:24%;background:radial-gradient(circle, rgba(255,210,63,0.18) 0%, rgba(255,210,63,0) 70%);box-shadow:0 0 52px rgba(255,210,63,0.12);animation-duration:7.5s;animation-delay:2s}
+    .orb-5{width:90px;height:90px;left:18%;top:70%;background:radial-gradient(circle, rgba(11,102,255,0.10) 0%, rgba(11,102,255,0) 70%);box-shadow:0 0 36px rgba(11,102,255,0.08);animation-duration:8.5s;animation-delay:3s}
+    .orb-6{width:100px;height:100px;right:24%;top:26%;background:radial-gradient(circle, rgba(255,210,63,0.14) 0%, rgba(255,210,63,0) 70%);box-shadow:0 0 40px rgba(255,210,63,0.10);animation-duration:6.8s;animation-delay:1.2s}
+
+    @keyframes orbFloat{
+      0%{transform:translateY(0) translateX(0)}
+      25%{transform:translateY(-18px) translateX(8px)}
+      50%{transform:translateY(-8px) translateX(-8px)}
+      75%{transform:translateY(-22px) translateX(6px)}
+      100%{transform:translateY(0) translateX(0)}
+    }
+    @media (max-width:767px){
+      .light-orb{display:none}
+    }
+  </style>
+</head>
 <body>
-    <header>
-        <h1>您的姓名</h1>
-        <p>您的專業或頭銜</p>
-        <div class="contact-info">
-            <p>Email: <a href="mailto:youremail@example.com">youremail@example.com</a></p>
-            <p>電話: 09XX-XXX-XXX</p>
-            <p>LinkedIn: <a href="https://linkedin.com/in/yourprofile" target="_blank">linkedin.com/in/yourprofile</a></p>
+
+  <!-- Floating decorative light-orbs -->
+  <div class="light-orb orb-1" aria-hidden="true"></div>
+  <div class="light-orb orb-2" aria-hidden="true"></div>
+  <div class="light-orb orb-3" aria-hidden="true"></div>
+  <div class="light-orb orb-4" aria-hidden="true"></div>
+  <div class="light-orb orb-5" aria-hidden="true"></div>
+  <div class="light-orb orb-6" aria-hidden="true"></div>
+
+  <!-- Hero -->
+  <header class="hero section">
+    <div class="container hero-wrap">
+      <div>
+        <span class="chip">AR Needs Board</span>
+        <h1 class="title">視語光點：讓沉默被聽見</h1>
+        <p class="subtitle">以 AR 擴增實境打造「需求板」，失語症患者拖曳 3D 代幣即可表達需求；照護者端即時接單、回報完成，減少猜測，縮短等待。</p>
+        <div style="display:flex; gap:12px; flex-wrap:wrap;">
+          <a class="btn primary" href="#contact">申請 Beta 測試</a>
+          <a class="btn secondary" href="#product">了解更多</a>
         </div>
-    </header>
+      </div>
+      <div class="hero-mock card" aria-hidden="true"></div>
+    </div>
+  </header>
 
-    <main>
-        <section class="section">
-            <h2>個人簡介</h2>
-            <p>在這裡寫一段簡短、有力的個人簡介。說明您的主要技能、經驗年資、以及您對職涯的目標或熱情所在。</p>
-        </section>
+  <!-- 痛點 -->
+  <section class="section pain" id="pain">
+    <div class="container">
+      <h2 class="title" style="font-size:32px; margin:0 0 16px">從照護現場長出來的解法</h2>
+      <p class="subtitle" style="margin:0 0 32px">臨時照護溝通不良、重複猜測、延誤理解，是家屬與服務員共同的痛。</p>
 
-        <section class="section">
-            <h2>工作經歷</h2>
-            <div class="job-item">
-                <h3>職位名稱</h3>
-                <p class="company-name">公司名稱 | 城市</p>
-                <p class="dates">XXXX 年 X 月 - XXXX 年 X 月</p>
-                <ul>
-                    <li>簡潔地列出您的主要職責和成就。請使用動詞開頭，並盡量量化您的成果。</li>
-                    <li>另一個重要的成就或專案。</li>
-                    <li>學到了關鍵技能或解決了某個問題。</li>
-                </ul>
-            </div>
-            </section>
+      <div class="grid cols-3">
+        <div class="card">
+          <h3>少猜測，多理解</h3>
+          <p>以圖像代語言，3 步驟送出需求，減少誤解與情緒拉扯。</p>
+        </div>
+        <div class="card">
+          <h3>即時確認</h3>
+          <p>送出／接單／完成全程留痕，照護責任可追蹤。</p>
+        </div>
+        <div class="card">
+          <h3>低門檻上手</h3>
+          <p>大按鈕、高對比、單指可用；追蹤不佳自動切換 2D 備援。</p>
+        </div>
+      </div>
+    </div>
+  </section>
 
-        <section class="section">
-            <h2>教育背景</h2>
-            <div class="education-item">
-                <h3>學位名稱 (例如：資訊工程學士)</h3>
-                <p class="school-name">學校名稱 | 城市</p>
-                <p class="dates">XXXX 年 X 月 - XXXX 年 X 月</p>
-            </div>
-            </section>
+  <!-- 產品功能 -->
+  <section class="section features" id="product">
+    <div class="container">
+      <h2 class="title" style="font-size:32px; margin:0 0 16px">產品功能</h2>
+      <p class="subtitle" style="margin:0 0 32px">四個模組，對應真實情境：生理、飲食、情緒、休閒。</p>
 
-        <section class="section">
-            <h2>技能</h2>
-            <ul class="skills-list">
-                <li>程式語言: HTML, CSS, JavaScript, Python</li>
-                <li>框架/工具: React, Node.js, Git, Docker</li>
-                <li>語言能力: 中文 (母語), 英文 (流利)</li>
-            </ul>
-        </section>
+      <div class="grid cols-4">
+        <div class="card">
+          <h3>AR 需求板</h3>
+          <p>拖曳 3D 代幣→ 放下 → OK，完成需求送出。</p>
+        </div>
+        <div class="card">
+          <h3>即時通知</h3>
+          <p>Firestore 同步、Telegram 一鍵接單與留言。</p>
+        </div>
+        <div class="card">
+          <h3>個人化模組</h3>
+          <p>自訂圖像與詞庫、語音輸出、排序依使用習慣調整。</p>
+        </div>
+        <div class="card">
+          <h3>AI 輔助分析</h3>
+          <p>使用歷程報告、逾時升級與需求預測。</p>
+        </div>
+      </div>
+    </div>
+  </section>
 
-        <section class="section">
-            <h2>專案經驗（選填）</h2>
-            <div class="project-item">
-                <h3>專案名稱</h3>
-                <p>專案描述：簡述專案目的、您在其中扮演的角色、以及使用的技術。</p>
-                <p><a href="http://yourprojectlink.com" target="_blank">查看專案連結</a></p>
-            </div>
-        </section>
-    </main>
+  <!-- 體驗流程 -->
+  <section class="section flow" id="flow">
+    <div class="container">
+      <h2 class="title" style="font-size:32px; margin:0 0 16px">怎麼用？</h2>
+      <p class="subtitle" style="margin:0 0 32px">三步驟完成需求送出與接單。</p>
 
-    <footer>
-        <p>&copy; 2025 您的姓名。保留所有權利。</p>
-    </footer>
+      <div class="grid cols-3 flow-steps">
+        <div class="card"><h3>放置需求板</h3><p>自動偵測平面，置入虛擬需求板。</p></div>
+        <div class="card"><h3>拖曳代幣</h3><p>靠近目標區自動磁吸、容錯半徑友善。</p></div>
+        <div class="card"><h3>OK 送出</h3><p>3 秒倒數可取消；照護端推播即時到。</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 技術架構 -->
+  <section class="section tech" id="tech">
+    <div class="container">
+      <h2 class="title" style="font-size:32px; margin:0 0 16px">技術架構</h2>
+      <p class="subtitle" style="margin:0 0 24px">Unity/AR Foundation 或 A-Frame（2D 模式），後端採 Firebase，通知走 Telegram Bot。</p>
+
+      <div class="grid cols-3">
+        <div class="card"><h3>前端</h3><p>Unity / A-Frame、Pointer Events、可切換 2D 備援。</p></div>
+        <div class="card"><h3>雲端</h3><p>Auth / Firestore / Cloud Functions、Scheduler 升級告警。</p></div>
+        <div class="card"><h3>通訊</h3><p>Telegram Inline Buttons：接單／留言／完成。</p></div>
+      </div>
+      <p class="note" style="margin-top:16px">隱私：資料最小化、加密傳輸、授權存取、事件稽核。</p>
+    </div>
+  </section>
+
+  <!-- 影響力與 SDGs -->
+  <section class="section impact" id="impact">
+    <div class="container">
+      <h2 class="title" style="font-size:32px; margin:0 0 16px">影響與 SDGs</h2>
+      <p class="subtitle" style="margin:0 0 24px">SDG 3/4/9/10：健康、教育、創新、減少不平等。</p>
+
+      <div class="kpi">
+        <div class="card"><h3 style="margin:0">↓ 溝通時間</h3><p>預期中位數明顯下降</p></div>
+        <div class="card"><h3 style="margin:0">↑ 滿意度</h3><p>患者與照護者主觀滿意提高</p></div>
+        <div class="card"><h3 style="margin:0">0% 超時</h3><p>逐步將未回應超時率趨近 0</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 團隊 -->
+  <section class="section team" id="team">
+    <div class="container">
+      <h2 class="title" style="font-size:32px; margin:0 0 16px">團隊</h2>
+      <p class="subtitle" style="margin:0 0 24px">以視覺代語言，攜手同行。</p>
+
+      <div class="grid cols-3">
+        <div class="card member"><div class="avatar" aria-hidden="true"></div><div><strong>隊長</strong><p>家庭照護經驗出發，整合醫護與數位學習。</p></div></div>
+        <div class="card member"><div class="avatar" aria-hidden="true"></div><div><strong>工程</strong><p>前端 AR、後端 Cloud Functions、資安與規則。</p></div></div>
+        <div class="card member"><div class="avatar" aria-hidden="true"></div><div><strong>設計</strong><p>可及性介面、圖像詞庫、情境腳本。</p></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 聯絡 -->
+  <section class="section" id="contact">
+    <div class="container">
+      <h2 class="title" style="font-size:32px; margin:0 0 16px">聯絡我們</h2>
+      <p class="subtitle" style="margin:0 0 24px">申請 Beta、合作導入或教育場域試點。</p>
+
+      <form name="contact">
+        <div class="grid cols-2">
+          <input name="name" placeholder="您的姓名 *" required />
+          <input name="email" type="email" placeholder="Email *" required />
+        </div>
+        <input name="org" placeholder="單位／機構（選填）" />
+        <textarea name="msg" placeholder="想了解的內容…" ></textarea>
+        <div><button class="btn primary" type="submit">送出訊息</button></div>
+      </form>
+    </div>
+  </section>
+
+  <footer>
+    <div class="container" style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:16px;">
+      <div>© 視語光點 • 語觸視界</div>
+      <div style="color:var(--ink-300)">隱私權｜服務條款</div>
+    </div>
+  </footer>
+
 </body>
 </html>
